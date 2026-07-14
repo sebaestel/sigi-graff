@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Fede Graff</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        color: #fff;
+      }
+      #video {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+      }
+      #canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        touch-action: none;
+      }
+      #ui {
+        position: fixed;
+        inset: 0;
+        z-index: 2;
+        pointer-events: none;
+      }
+      #ui > * {
+        pointer-events: auto;
+      }
+      #start {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        background: radial-gradient(ellipse at center, #1a1a1a 0%, #000 100%);
+        text-align: center;
+        padding: 24px;
+      }
+      #start h1 {
+        font-size: 32px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      #start p {
+        opacity: 0.7;
+        max-width: 320px;
+        line-height: 1.5;
+      }
+      #start button {
+        margin-top: 8px;
+        padding: 16px 32px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #000;
+        background: #fff;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+      #toolbar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: max(12px, env(safe-area-inset-bottom));
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 8px;
+      }
+      #toolbar.on {
+        display: flex;
+      }
+      #tools {
+        display: flex;
+        gap: 4px;
+        padding: 4px;
+        background: rgba(0, 0, 0, 0.55);
+        border-radius: 999px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      .tool {
+        padding: 7px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        opacity: 0.55;
+        white-space: nowrap;
+      }
+      .tool.on {
+        background: #fff;
+        color: #000;
+        opacity: 1;
+      }
+      #colors {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        background: rgba(0, 0, 0, 0.55);
+        border-radius: 999px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        max-width: calc(100vw - 24px);
+        flex-wrap: wrap;
+      }
+      .swatch {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: transform 0.12s ease;
+      }
+      .swatch.on {
+        border-color: #fff;
+        transform: scale(1.15);
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.4);
+      }
+      #size {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 14px;
+        background: rgba(0, 0, 0, 0.55);
+        border-radius: 999px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      #size label {
+        font-size: 11px;
+        font-weight: 600;
+        opacity: 0.7;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      #size input {
+        width: 140px;
+        accent-color: #fff;
+      }
+      #sizePreview {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #fff;
+        flex-shrink: 0;
+      }
+      #actions {
+        position: absolute;
+        top: max(16px, env(safe-area-inset-top));
+        right: 16px;
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+      }
+      #actions.on {
+        display: flex;
+      }
+      #actions button {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        color: #fff;
+        font-size: 20px;
+        cursor: pointer;
+      }
+      #err {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 16px;
+        background: rgba(200, 0, 0, 0.9);
+        border-radius: 12px;
+        display: none;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <video id="video" playsinline autoplay muted></video>
+    <canvas id="canvas"></canvas>
+    <div id="ui">
+      <div id="start">
+        <h1>Fede Graff</h1>
+        <p>Apuntá al muro y dibujá con el dedo. El graffiti queda pegado al espacio.</p>
+        <button id="startBtn">Empezar</button>
+      </div>
+      <div id="toolbar">
+        <div id="tools"></div>
+        <div id="colors"></div>
+        <div id="size"></div>
+      </div>
+      <div id="actions">
+        <button id="saveBtn" title="Guardar">↓</button>
+        <button id="undoBtn" title="Deshacer">↶</button>
+        <button id="clearBtn" title="Limpiar">✕</button>
+      </div>
+      <div id="err"></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
