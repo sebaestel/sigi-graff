@@ -8,6 +8,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "meshline": "^3.3.1",
     "three": "^0.169.0"
